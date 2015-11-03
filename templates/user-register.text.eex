@@ -1,0 +1,7 @@
+Hey <%= name || email %>,
+
+Welcome to the Tiny Mesh Cloud,
+
+Login now from https://cloud.tiny-mesh.com
+
+Tiny Mesh AS © 2015 - Workbench (https://cloud.tiny-mesh.com) - www.tiny-mesh.com (https://tiny-mesh.com)
