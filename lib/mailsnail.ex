@@ -41,12 +41,12 @@ defmodule Mailsnail do
       end
     end
 
-    Toniq.enqueue Mailsnail.Worker, %Msg{
+    %{} = Toniq.enqueue Mailsnail.Worker, %Msg{
       to: message[:to],
       from: message[:from],
       subject: message[:subject],
-      html: message[:html],
-      text: message[:text],
+      html: message[:html] || message[:text] || "",
+      text: message[:text] || "",
       template: templates,
       doc: message[:doc] || []
     }
