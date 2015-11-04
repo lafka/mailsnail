@@ -13,7 +13,7 @@ Provides a extremely simple mechanism to offload emails to a remote service.
 ```
 # As genserver call
 
-:ok = GenServer.call Mailsnail, {:send, %{
+:ok = GenServer.call Mailsnail.Server, {:send, %{
 	to: "test@mail.co",
 	from: {"mail@company.co", "Company Name"},
 	subject: "I Like ducks!",
@@ -35,17 +35,17 @@ Mailsnail.send %{
 
 Mailsnail.send %{
 	....
-	html: "There are <%= length(ducks) %> here",
+	html: {:string, "There are <%= length(dock.ducks) %> here"},
 	doc: [ducks: []]
 }
 
-## And stored templates even
+## And some other varians
 
 Mailsnail.send %{
 	....
-	template: [html: "./tpl/duck-counter.html.eex",
-						 text: "./tpl/duck-counter.plain.eex",
-						 subject: aFunctionOrFile],
+	template: [html: {:path, "./tpl/duck-counter.html.eex"},
+	           text: {:alias, :duckcounter}, # stored in config
+	           subject: fn(%Msg{doc: doc}) -> "#{length(doc[:ducks])} ducks!" end],
 	doc: [ducks: []]
 }
 ```
