@@ -2,6 +2,14 @@ defmodule MailsnailTest do
   use ExUnit.Case
   doctest Mailsnail
 
+  setup_all do
+    Toniq.JobPersistence.failed_jobs |> Enum.each &Toniq.JobPersistence.delete_failed_job/1
+    Toniq.JobPersistence.incoming_jobs |> Enum.each &Toniq.JobPersistence.remove_from_incoming_jobs/1
+
+    :email_adapter_mailsnail_mock.clear()
+    :ok
+  end
+
   test "send email" do
     Toniq.JobEvent.subscribe
 
@@ -13,12 +21,7 @@ defmodule MailsnailTest do
       text: text = "plain"
     }
 
-    receive do
-      {:finished, ^job}  -> :ok
-    after
-      5000 -> throw :timeout
-    end
-
+    :ok = await job
     Toniq.JobEvent.unsubscribe
 
     last = :email_adapter_mailsnail_mock.last()
@@ -39,12 +42,7 @@ defmodule MailsnailTest do
       text: text = "plain"
     }}
 
-    receive do
-      {:finished, ^job}  -> :ok
-    after
-      5000 -> throw :timeout
-    end
-
+    :ok = await job
     Toniq.JobEvent.unsubscribe
 
     last = :email_adapter_mailsnail_mock.last()
@@ -52,5 +50,67 @@ defmodule MailsnailTest do
     assert last[:from] == {from, from}
     assert last[:subject] == subject
     assert last[:message] == [{"html", html}, {"text", text}]
+  end
+
+
+  test "email template: string" do
+    Toniq.JobEvent.subscribe
+
+    job = Mailsnail.send %{
+      to: "test@client.com",
+      from: "test@provider.com",
+      template: [subject: {:string, "hello <%= doc[:replacement] %>"}],
+      doc: [replacement: "you"]
+    }
+
+    :ok = await job
+    Toniq.JobEvent.unsubscribe
+
+    last = :email_adapter_mailsnail_mock.last()
+    assert last[:subject] == "hello you"
+  end
+
+  test "email template: path & alias" do
+    Toniq.JobEvent.subscribe
+
+    job = Mailsnail.send %{
+      to: "test@client.com",
+      from: "test@provider.com",
+      template: [html: {:alias, :"test.html.eex"},
+                 text: {:path, Path.join([__DIR__, "templates", "test.text.eex"])}],
+      doc: [replacement: re = "something"]
+    }
+
+    :ok = await job
+    Toniq.JobEvent.unsubscribe
+
+    last = :email_adapter_mailsnail_mock.last()
+    assert last[:message] == [{"html", "html #{re}\n"}, {"text", "text #{re}\n"}]
+  end
+
+  test "email template: group" do
+    Toniq.JobEvent.subscribe
+
+    job = Mailsnail.send %{
+      to: "test@client.com",
+      from: "test@provider.com",
+      template: {:alias, :test},
+      doc: [replacement: re = "something"]
+    }
+
+    :ok = await job
+    Toniq.JobEvent.unsubscribe
+
+    last = :email_adapter_mailsnail_mock.last()
+    assert last[:subject] == "subject #{re}"
+    assert last[:message] == [{"html", "html #{re}\n"}, {"text", "text #{re}\n"}]
+  end
+
+  defp await(job) do
+    receive do
+      {:finished, ^job}  -> :ok
+    after
+      5000 -> :timeout
+    end
   end
 end

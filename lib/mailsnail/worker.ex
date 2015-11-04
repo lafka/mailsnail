@@ -1,13 +1,16 @@
 defmodule Mailsnail.Worker do
   use Toniq.Worker
 
+  require Logger
+
   alias Mailsnail.Msg
   alias Mailsnail.Template
 
   def perform(%Msg{} = msg) do
-    templates = is_atom(msg.template) && Template.proxy(msg.template) || msg.template
+    templates = Template.expand msg.template
+
     msg = Enum.reduce templates, msg, fn({k, v}, acc) ->
-      {:ok, newval} = Template.proxy(v).(msg)
+      newval = Template.proxy(v).(msg)
 
       Map.put(acc, k, newval)
     end
@@ -16,8 +19,17 @@ defmodule Mailsnail.Worker do
       |> maybe_add(:html, msg.html)
       |> maybe_add(:text, msg.text)
 
-    {:ok, _} = :email.send msg.to, msg.from, msg.subject, body
+    subject = String.strip msg.subject || ""
+
+    {:ok, _} = :email.send msg.to, msg.from, subject, body
     :ok
+  rescue e ->
+    Logger.error """
+    failed to send email: #{inspect e}
+
+    #{Exception.format_stacktrace}
+    """
+    raise e
   end
 
   defp maybe_add(acc, _k, nil), do: acc

@@ -26,16 +26,18 @@ defmodule Mailsnail do
     end
 
     # make sure templates exists
-    for {k, v} <- message[:template] || [] do
+    templates = Mailsnail.Template.expand message[:template] || []
+
+    templates = Enum.map templates, fn({k, v}) ->
       cond do
         not k in [:subject, :html, :text] ->
-          raise %ArgumentError{message: "invalid template '#{k}"}
+          raise %ArgumentError{message: "invalid parameter '#{k}'"}
 
-        is_binary(v) and not Mailsnail.Template.exists?(v) ->
-          raise %ArgumentError{message: "no such template '#{v}"}
+        not Mailsnail.Template.valid?(v) ->
+          raise %ArgumentError{message: "no such template '#{inspect v}"}
 
         true ->
-          true
+          {k, v}
       end
     end
 
@@ -45,7 +47,7 @@ defmodule Mailsnail do
       subject: message[:subject],
       html: message[:html],
       text: message[:text],
-      template: message[:template] || [],
+      template: templates,
       doc: message[:doc] || []
     }
   end
