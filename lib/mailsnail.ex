@@ -21,8 +21,8 @@ defmodule Mailsnail do
   """
   @spec send(%Msg{}) :: :ok
   def send(%{} = message) do
-    unless [] = extra = Enum.reject Map.keys(message), &(Enum.member? @keys, &1) do
-      raise %ArgumentError{message: "invalid keys #{Enum.join(extra, ", ")}"}
+    unless [] == (extra = Enum.reject Map.keys(message), &(Enum.member? @keys, &1)) do
+      raise %ArgumentError{message: "invalid keys: #{Enum.join(extra, ", ")}"}
     end
 
     # make sure templates exists
