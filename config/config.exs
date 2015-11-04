@@ -23,11 +23,7 @@ config :mailsnail,
     "forgot-password.subject": "./templates/forgot-password.subject.eex",
   ]
 
-config :toniq, redis_url: "redis://[fd00::1]:6379/0"
-config :email,
-  adapter: :mailgun,
-  mailgun: [
-    domain: 'sandboxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.mailgun.org',
-    apiurl: 'https://api.mailgun.net/v3',
-    apikey: 'key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-  ]
+config :toniq, redis_url: "redis://[fd00::1:efa5:d5fb]:6379/0"
+config :email, adapter: :mock
+
+import_config "#{Mix.env}.exs"

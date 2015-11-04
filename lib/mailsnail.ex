@@ -1,5 +1,18 @@
 defmodule Mailsnail do
+
+  use Application
+
   alias Mailsnail.Msg
+
+
+  def start(_type, _args) do
+    import Supervisor.Spec
+
+    children = [ worker(Mailsnail.Server, [[name: Mailsnail.Server]]) ]
+
+    {:ok, _pid} = Supervisor.start_link children, strategy: :one_for_one
+  end
+
 
   @keys Map.keys(%Msg{})
 
@@ -35,5 +48,13 @@ defmodule Mailsnail do
       template: message[:template] || [],
       doc: message[:doc] || []
     }
+  end
+
+  defmodule Server do
+    use GenServer
+
+    def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, nil, opts)
+
+    def handle_call({:send, %{} = msg}, _from, state), do: {:reply, Mailsnail.send(msg), state}
   end
 end

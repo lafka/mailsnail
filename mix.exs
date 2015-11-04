@@ -11,7 +11,10 @@ defmodule Mailsnail.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :toniq, :asn1, :email]]
+    [
+      mod: {Mailsnail, []},
+      applications: [:logger, :toniq, :asn1, :email]
+    ]
   end
 
   defp deps do

@@ -16,7 +16,7 @@ defmodule Mailsnail.Worker do
       |> maybe_add(:html, msg.html)
       |> maybe_add(:text, msg.text)
 
-    {:ok, _} = IO.inspect :email.send msg.to, msg.from, msg.subject, body
+    {:ok, _} = :email.send msg.to, msg.from, msg.subject, body
     :ok
   end
 
