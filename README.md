@@ -49,3 +49,23 @@ Mailsnail.send %{
 	doc: [ducks: []]
 }
 ```
+
+
+## Add some metrics!
+
+```
+logmetrics = fn
+	(%Msg{template: {:alias, a}}, status) ->
+		 :influx_udp.write "mails",
+			 %{"type" => a},
+			 %{"host" => node, "status" => status}
+	(%Msg{}, status) ->
+		 :influx_udp.write "mails",
+			 %{"type" => "custom"},
+			 %{"host" => node, "status" => status}
+end
+
+...
+config :mailsnail, metrics: logmetrics
+...
+```

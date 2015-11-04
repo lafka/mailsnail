@@ -22,14 +22,27 @@ defmodule Mailsnail.Worker do
     subject = String.strip msg.subject || ""
 
     {:ok, _} = :email.send msg.to, msg.from, subject, body
+    metrics(msg, "ok")
+
     :ok
   rescue e ->
+    :ok  = metrics msg, "error"
     Logger.error """
-    failed to send email: #{inspect e}
+    failed to send email: #{inspect msg}
 
-    #{Exception.format_stacktrace}
+    error: #{inspect e}
+    stack:
+      #{Exception.format_stacktrace}
     """
     raise e
+  end
+
+  defp metrics(%Msg{} = msg, status) do
+    case Application.get_env :mailsnail, :metrics do
+      fun when is_function(fun) -> fun.(msg, status)
+      _ -> :ok
+    end
+  rescue e -> {:error, e}
   end
 
   defp maybe_add(acc, _k, nil), do: acc

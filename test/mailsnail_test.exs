@@ -106,6 +106,23 @@ defmodule MailsnailTest do
     assert last[:message] == [{"html", "html #{re}\n"}, {"text", "text #{re}\n"}]
   end
 
+  test "metrics" do
+    Toniq.JobEvent.subscribe
+    {:ok, counter} = Agent.start_link fn() -> 0 end
+
+    Application.put_env :mailsnail, :metrics, fn(_, _status) -> Agent.update(counter, &(&1 + 1)) end
+
+    job = Mailsnail.send %{ subject: "test", to: "test@client.com", from: "test@provider.com", text: "hello" }
+    :ok = await job
+    assert 1 = Agent.get counter, &(&1)
+
+    job = Mailsnail.send %{ to: "test@client.com", from: "test@provider.com", text: "hello" }
+    :ok = await job
+    assert 2 = Agent.get counter, &(&1)
+
+    Application.put_env :mailsnail, :metrics, nil
+  end
+
   defp await(job) do
     receive do
       {:finished, ^job}  -> :ok
