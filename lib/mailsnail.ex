@@ -8,7 +8,7 @@ defmodule Mailsnail do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    children = [ worker(Mailsnail.Server, [[name: Mailsnail.Server]]) ]
+    children = [ worker(Mailsnail.Server, [[name: {:global, Mailsnail.Server}]]) ]
 
     {:ok, _pid} = Supervisor.start_link children, strategy: :one_for_one
   end
