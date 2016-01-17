@@ -57,6 +57,9 @@ defmodule Mailsnail do
 
     def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, nil, opts)
 
-    def handle_call({:send, %{} = msg}, _from, state), do: {:reply, Mailsnail.send(msg), state}
+    def handle_call({:send, %{} = msg}, _from, state) do
+      job = Mailsnail.send msg
+      {:reply, {:ok, job}, state}
+    end
   end
 end

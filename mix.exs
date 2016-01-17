@@ -21,7 +21,8 @@ defmodule Mailsnail.Mixfile do
     [
       {:email, github: "kivra/email", tag: "0.1.3"},
       {:httpoison, "~> 0.7"},
-      {:toniq, "~> 1.0"}
+      {:toniq, github: "lafka/toniq", branch: "lafka-inject-uri"},
+      {:dbl, git: "ssh://git@phabricator.highlands.tiny-mesh.com/diffusion/DBL/dbl.git", branch: "dbl-mongodb"}
     ]
   end
 end

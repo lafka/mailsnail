@@ -34,7 +34,7 @@ defmodule MailsnailTest do
   test "send email (genserver)" do
     Toniq.JobEvent.subscribe
 
-    job = GenServer.call Mailsnail.Server, {:send, %{
+    {:ok, job} = GenServer.call Mailsnail.Server, {:send, %{
       to: to = "test@client.com",
       from: from = "test@provider.com",
       subject: subject = "Hello",
