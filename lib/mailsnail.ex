@@ -41,6 +41,12 @@ defmodule Mailsnail do
       end
     end
 
+    if nil === message[:to], do:
+      raise %ArgumentError{message: "no recipient defined"}
+
+    if nil === message[:from], do:
+      raise %ArgumentError{message: "no sender defined"}
+
     %{} = Toniq.enqueue Mailsnail.Worker, %Msg{
       to: message[:to],
       from: message[:from],
@@ -58,8 +64,10 @@ defmodule Mailsnail do
     def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, nil, opts)
 
     def handle_call({:send, %{} = msg}, _from, state) do
-      job = Mailsnail.send msg
-      {:reply, {:ok, job}, state}
+      try do
+        job = Mailsnail.send msg
+        {:reply, {:ok, job}, state}
+      rescue e -> {:reply, {:error, e}, state} end
     end
   end
 end
